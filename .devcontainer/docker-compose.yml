@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VARIANT: 12
+
+    volumes:
+      - ..:/backend-takehome:cached
+      - app-dist:/backend-takehome/dist
+      - app-node_modules:/backend-takehome/node_modules
+      - ~/.config/gcloud:/home/node/.config/gcloud:cached
+
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+
+    # Uncomment the next line to use a non-root user for all processes.
+    user: node
+
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.routers.backend-takehome.entrypoints=http,https
+      - traefik.http.routers.backend-takehome.rule=Host(`backend-takehome.this.test`)
+      - traefik.http.routers.backend-takehome.tls=true
+      - traefik.http.routers.backend-takehome.service=backend-takehome
+      - traefik.http.services.backend-takehome.loadbalancer.server.port=3001
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+volumes:
+  app-dist:
+  app-node_modules:
+
+networks:
+  default:
+    external:
+      name: docker
